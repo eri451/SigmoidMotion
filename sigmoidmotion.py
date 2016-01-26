@@ -9,12 +9,15 @@ class SigmoidMotion:
     HOST   = '172.22.99.206'
     PORT   = 2342
     s      = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    colorA = {"red":0x66, "green":0xCC, "blue":0x00}
+    colorB = {"red":0xCC, "green":0x66, "blue":0x00}
     # header
     data   = [pack('b',0x0F), pack('b',0), pack('!h',678)]
     # east side LEDs
-    left   = pack('BBB',0x00,0xCC,0x66)
+    left   = pack('BBB',colorA["blue"], colorA["green"], colorA["red"])
     # west side LEDs
-    right  = pack('BBB',0x00,0x66,0xCC)
+    right  = pack('BBB',colorB["blue"], colorB["green"], colorB["red"])
 
     period = 3000         # five minutes
     transitionLength = 40 # four seconds
@@ -46,11 +49,27 @@ class SigmoidMotion:
 
     def transition(self, time, asc):
         if asc:
-            self.left  = pack('BBB', 0x00, self.ramp(0xCC,0x66,time), self.ramp(0x66, 0xCC, time))
-            self.right  = pack('BBB', 0x00, self.ramp(0x66,0xCC,time), self.ramp(0xCC, 0x66, time))
+            lred   = self.ramp(self.colorA["red"],   self.colorB["red"],   time)
+            lgreen = self.ramp(self.colorA["green"], self.colorB["green"], time)
+            lblue  = self.ramp(self.colorA["blue"],  self.colorB["blue"],  time)
+
+            rred   = self.ramp(self.colorB["red"],   self.colorA["red"],   time)
+            rgreen = self.ramp(self.colorB["green"], self.colorA["green"], time)
+            rblue  = self.ramp(self.colorB["blue"],  self.colorA["blue"],  time)
+
+            self.left  = pack('BBB', lblue, lgreen, lred)
+            self.right = pack('BBB', rblue, rgreen, rred)
         else:
-            self.left  = pack('BBB', 0x00, self.ramp(0x66,0xCC,time), self.ramp(0xCC, 0x66, time))
-            self.right  = pack('BBB', 0x00, self.ramp(0xCC,0x66,time), self.ramp(0x66, 0xCC, time))
+            rred   = self.ramp(self.colorA["red"],   self.colorB["red"],   time)
+            rgreen = self.ramp(self.colorA["green"], self.colorB["green"], time)
+            rblue  = self.ramp(self.colorA["blue"],  self.colorB["blue"],  time)
+
+            lred   = self.ramp(self.colorB["red"],   self.colorA["red"],  time)
+            lgreen = self.ramp(self.colorB["green"], self.colorA["green"], time)
+            lblue  = self.ramp(self.colorB["blue"],  self.colorA["blue"],  time)
+
+            self.left  = pack('BBB', lblue, lgreen, lred)
+            self.right = pack('BBB', rblue, rgreen, rred)
 
     def __call__(self):
         globaltimer = 0

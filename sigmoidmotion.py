@@ -50,29 +50,31 @@ class SigmoidMotion:
             self.left  = pack('BBB', 0x00, self.ramp(0x66,0xCC,time), self.ramp(0xCC, 0x66, time))
             self.right  = pack('BBB', 0x00, self.ramp(0xCC,0x66,time), self.ramp(0x66, 0xCC, time))
 
-    def __call__():
+    def __call__(self):
         a = 0
         epoch = 0
         asc = True
         while True:
             a = a + 1
-            if a < sms.period:
-                sms.s.sendto(sms.packet(),(sms.HOST,sms.PORT))
+            if a < self.period:
+                self.s.sendto(self.packet(),(self.HOST,self.PORT))
                 time.sleep(0.09)
                 continue
-            elif a == sms.period:
+            elif a == self.period:
                 epoch = a
-                sms.transition(a-epoch, asc)
-            elif a > sms.period and a < sms.period + sms.transitionLength:
-                sms.transition(a-epoch, asc)
+                self.transition(a-epoch, asc)
+            elif a > self.period and a < self.period + self.transitionLength:
+                self.transition(a-epoch, asc)
             else:
                 asc = not asc
                 a = 0
 
-            sms.s.sendto(sms.packet(),(sms.HOST,sms.PORT))
+            self.s.sendto(self.packet(),(self.HOST,self.PORT))
             time.sleep(0.08)
 
         s.close()
 
 if __name__ == '__main__':
-    SigmoidMotion()
+    sigmo = SigmoidMotion()
+    sigmo.period = 100
+    sigmo()

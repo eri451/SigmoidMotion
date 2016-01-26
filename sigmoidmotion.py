@@ -19,6 +19,8 @@ class SigmoidMotion:
     period = 3000         # five minutes
     transitionLength = 40 # four seconds
 
+    maxRuntime = 36000    # sixty minutes
+
 
     def ramp(self, start, end, time):
         """ returns value between start and end at given time linary """
@@ -51,23 +53,25 @@ class SigmoidMotion:
             self.right  = pack('BBB', 0x00, self.ramp(0xCC,0x66,time), self.ramp(0x66, 0xCC, time))
 
     def __call__(self):
-        a = 0
+        globaltimer = 0
+        timer = 0
         epoch = 0
         asc = True
-        while True:
-            a = a + 1
-            if a < self.period:
+        while globaltimer < self.maxRuntime:
+            globaltimer = globaltimer + 1
+            timer = timer + 1
+            if timer < self.period:
                 self.s.sendto(self.packet(),(self.HOST,self.PORT))
                 time.sleep(0.09)
                 continue
-            elif a == self.period:
-                epoch = a
-                self.transition(a-epoch, asc)
-            elif a > self.period and a < self.period + self.transitionLength:
-                self.transition(a-epoch, asc)
+            elif timer == self.period:
+                epoch = timer
+                self.transition(timer-epoch, asc)
+            elif timer > self.period and timer < self.period + self.transitionLength:
+                self.transition(timer-epoch, asc)
             else:
                 asc = not asc
-                a = 0
+                timer = 0
 
             self.s.sendto(self.packet(),(self.HOST,self.PORT))
             time.sleep(0.08)
@@ -76,5 +80,4 @@ class SigmoidMotion:
 
 if __name__ == '__main__':
     sigmo = SigmoidMotion()
-    sigmo.period = 100
     sigmo()
